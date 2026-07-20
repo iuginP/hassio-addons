@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 from pathlib import Path
+
+from configobj import ConfigObj
 
 DEFAULTS = {
     "driver": "weewx.drivers.simulator",
@@ -60,13 +63,41 @@ def station_command(options: dict[str, object], root: Path) -> list[str]:
     ]
 
 
+def install_home_assistant_mqtt(
+    config_file: Path, root: Path, source: Path
+) -> None:
+    """Install and enable the bundled Home Assistant MQTT service."""
+    user_dir = root / "bin/user"
+    user_dir.mkdir(parents=True, exist_ok=True)
+    (user_dir / "__init__.py").touch(exist_ok=True)
+    for filename in ("home_assistant_mqtt.py", "mqtt_discovery.py"):
+        shutil.copyfile(source / filename, user_dir / filename)
+
+    config = ConfigObj(str(config_file), encoding="utf-8")
+    services = config["Engine"]["Services"]
+    configured = services.get("process_services", [])
+    if isinstance(configured, str):
+        configured = [configured]
+    service = "user.home_assistant_mqtt.HomeAssistantMQTT"
+    if service not in configured:
+        configured.append(service)
+    services["process_services"] = configured
+    config.write()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--options", type=Path, default=Path("/data/options.json"))
     parser.add_argument("--root", type=Path, default=Path("/data/weewx"))
+    parser.add_argument(
+        "--mqtt-service-source", type=Path, default=Path("/opt/weewx-ha")
+    )
     args = parser.parse_args()
     args.root.mkdir(parents=True, exist_ok=True)
     subprocess.run(station_command(load_options(args.options), args.root), check=True)
+    install_home_assistant_mqtt(
+        args.root / "weewx.conf", args.root, args.mqtt_service_source
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 name: WeeWX
-version: 1.1.0
+version: 1.2.0
 slug: weewx
 description: Run WeeWX weather station software inside Home Assistant OS
 url: https://github.com/iuginP/hassio-addons/tree/main/weewx
@@ -11,6 +11,8 @@ boot: auto
 init: false
 usb: true
 uart: true
+services:
+  - mqtt:need
 ports:
   80/tcp: 8080
 ports_description:

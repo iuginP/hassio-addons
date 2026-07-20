@@ -34,4 +34,5 @@ Pull requests targeting `main` run the same checks automatically.
 
 - The first add-on implemented here is WeeWX.
 - WeeWX settings are available in the Home Assistant Configuration tab.
+- WeeWX automatically creates a weather-station device and sensor entities through MQTT Discovery.
 - Station data is stored in the app's persistent `/data` volume.

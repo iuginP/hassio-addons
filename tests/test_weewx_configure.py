@@ -39,6 +39,30 @@ class WeeWXConfigureTests(unittest.TestCase):
         self.assertIn(f"--config={root / 'weewx.conf'}", command)
         self.assertIn("--no-backup", command)
 
+    def test_home_assistant_mqtt_service_is_installed_idempotently(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            (source / "home_assistant_mqtt.py").write_text("# service\n")
+            (source / "mqtt_discovery.py").write_text("# discovery\n")
+            config_file = root / "weewx.conf"
+            config_file.write_text(
+                "[Engine]\n"
+                "    [[Services]]\n"
+                "        process_services = weewx.engine.StdConvert\n"
+            )
+
+            configure.install_home_assistant_mqtt(config_file, root, source)
+            configure.install_home_assistant_mqtt(config_file, root, source)
+
+            installed = (root / "bin/user/home_assistant_mqtt.py").read_text()
+            self.assertEqual(installed, "# service\n")
+            config_text = config_file.read_text()
+            self.assertEqual(
+                config_text.count("user.home_assistant_mqtt.HomeAssistantMQTT"), 1
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

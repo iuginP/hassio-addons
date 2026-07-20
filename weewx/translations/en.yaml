@@ -1,7 +1,7 @@
 configuration:
   driver:
     name: WeeWX driver
-    description: Python module for the weather-station driver. Keep the simulator to test without hardware.
+    description: Python module for the weather-station driver. Keep the simulator to test without hardware. List of supported drivers https://www.weewx.com/docs/4.10/utilities.htm#Action_--list-drivers
   units:
     name: Unit system
     description: Unit system used in generated reports.
