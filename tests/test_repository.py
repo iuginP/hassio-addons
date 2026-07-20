@@ -7,6 +7,21 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_APP_KEYS = {"name", "version", "slug", "description", "arch"}
+WEEWX_BUILTIN_DRIVERS = (
+    "weewx.drivers.acurite",
+    "weewx.drivers.cc3000",
+    "weewx.drivers.fousb",
+    "weewx.drivers.simulator",
+    "weewx.drivers.te923",
+    "weewx.drivers.ultimeter",
+    "weewx.drivers.vantage",
+    "weewx.drivers.wmr100",
+    "weewx.drivers.wmr300",
+    "weewx.drivers.wmr9x8",
+    "weewx.drivers.ws1",
+    "weewx.drivers.ws23xx",
+    "weewx.drivers.ws28xx",
+)
 
 
 def png_dimensions(path: Path) -> tuple[int, int]:
@@ -65,6 +80,12 @@ class RepositoryTests(unittest.TestCase):
 
     def test_weewx_ui_options_match_weewx_5(self):
         config = yaml.safe_load((ROOT / "weewx/config.yaml").read_text())
+        self.assertIn("mqtt:need", config["services"])
+        self.assertEqual(
+            config["schema"]["driver"],
+            "list(%s)" % "|".join(WEEWX_BUILTIN_DRIVERS),
+        )
+        self.assertIn(config["options"]["driver"], WEEWX_BUILTIN_DRIVERS)
         self.assertEqual(config["schema"]["units"], "list(us|metric|metricwx)")
         self.assertEqual(config["schema"]["altitude_unit"], "list(meter|foot)")
         translations = yaml.safe_load(

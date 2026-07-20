@@ -1,5 +1,5 @@
 name: WeeWX
-version: 1.1.0
+version: 1.2.0
 slug: weewx
 description: Run WeeWX weather station software inside Home Assistant OS
 url: https://github.com/iuginP/hassio-addons/tree/main/weewx
@@ -11,6 +11,8 @@ boot: auto
 init: false
 usb: true
 uart: true
+services:
+  - mqtt:need
 ports:
   80/tcp: 8080
 ports_description:
@@ -28,7 +30,7 @@ options:
   altitude: 0
   altitude_unit: meter
 schema:
-  driver: str
+  driver: list(weewx.drivers.acurite|weewx.drivers.cc3000|weewx.drivers.fousb|weewx.drivers.simulator|weewx.drivers.te923|weewx.drivers.ultimeter|weewx.drivers.vantage|weewx.drivers.wmr100|weewx.drivers.wmr300|weewx.drivers.wmr9x8|weewx.drivers.ws1|weewx.drivers.ws23xx|weewx.drivers.ws28xx)
   units: list(us|metric|metricwx)
   location: str
   latitude: float(-90,90)
