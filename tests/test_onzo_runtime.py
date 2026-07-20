@@ -26,6 +26,10 @@ class OnzoRuntimeTests(unittest.TestCase):
             },
         )
 
+    def test_hid_path_is_safe_for_home_assistant_state(self):
+        self.assertEqual(runtime.display_path(b"/dev/hidraw1"), "/dev/hidraw1")
+        self.assertEqual(runtime.display_path("/dev/hidraw2"), "/dev/hidraw2")
+
 
 if __name__ == "__main__":
     unittest.main()
