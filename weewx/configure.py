@@ -85,6 +85,17 @@ def install_home_assistant_mqtt(
     config.write()
 
 
+def configure_console_logging(config_file: Path) -> None:
+    """Send WeeWX logs to the container console instead of /dev/log."""
+    config = ConfigObj(str(config_file), encoding="utf-8")
+    if "Logging" not in config:
+        config["Logging"] = {}
+    if "root" not in config["Logging"]:
+        config["Logging"]["root"] = {}
+    config["Logging"]["root"]["handlers"] = ["console"]
+    config.write()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--options", type=Path, default=Path("/data/options.json"))
@@ -98,6 +109,7 @@ def main() -> None:
     install_home_assistant_mqtt(
         args.root / "weewx.conf", args.root, args.mqtt_service_source
     )
+    configure_console_logging(args.root / "weewx.conf")
 
 
 if __name__ == "__main__":
