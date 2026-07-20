@@ -19,6 +19,10 @@ This repository is prepared to be used as a custom Home Assistant add-on reposit
 4. Start the add-on after installation completes.
 5. Open the add-on web interface or inspect the logs to confirm WeeWX started correctly.
 
+## Install the Onzo Smart Energy Meter app
+
+Install the app from the same repository, ensure Home Assistant's MQTT integration and Mosquitto Broker app are configured, then attach one or more Onzo meters by USB. Every connected clamp is discovered as a separate Home Assistant device.
+
 ## Development
 
 Run the repository and app validation suite locally with:
