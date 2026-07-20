@@ -21,7 +21,7 @@ import discovery
 import runtime
 from protocol import Clamp, Connection
 
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 LOG = logging.getLogger("onzo")
 
 
@@ -185,35 +185,61 @@ class MeterWorker(threading.Thread):
         try:
             connection.connect()
             clamp = Clamp(connection)
-            self.serial = discovery.normalize_serial(clamp.get_serial())
+            next_timeout_log = 0.0
+
+            def report_timeout() -> None:
+                nonlocal next_timeout_log
+                now = time.monotonic()
+                if now >= next_timeout_log:
+                    LOG.warning(
+                        "Onzo receiver on HID path %r is not receiving meter data; "
+                        "the clamp may be off. Retrying.",
+                        self.path,
+                    )
+                    next_timeout_log = now + 60
+
+            while self.serial is None and not self.stop_event.is_set():
+                try:
+                    self.serial = discovery.normalize_serial(clamp.get_serial())
+                except TimeoutError:
+                    report_timeout()
+                    self.stop_event.wait(self.poll_interval)
+            if self.serial is None:
+                return
             name = self.names.get(self.serial, f"Onzo {self.serial}")
             LOG.info("Discovered %s on HID path %r", name, self.path)
             self.publisher.register(self.serial, name)
+            hid_path = runtime.display_path(self.path)
+            self.publisher.state(self.serial, {"hid_path": hid_path})
             reactive_power = None
             battery_voltage = None
             temperature = None
             next_reactive = 0.0
             next_slow = 0.0
             while not self.stop_event.is_set():
-                now = time.monotonic()
-                power = clamp.get_power()
-                if now >= next_reactive or reactive_power is None:
-                    reactive_power = clamp.get_powervars()
-                    next_reactive = now + 15
-                if now >= next_slow or battery_voltage is None:
-                    battery_voltage = clamp.get_batteryvolts()
-                    temperature = clamp.get_temperature()
-                    next_slow = now + 600
-                values = {
-                    "power": power,
-                    "reactive_power": reactive_power,
-                    "apparent_power": round(math.hypot(power, reactive_power)),
-                    "energy": clamp.get_cumulative_kwh(),
-                    "battery_voltage": battery_voltage,
-                    "temperature": temperature,
-                    "mains_voltage": clamp.get_voltage(),
-                }
-                self.publisher.state(self.serial, values)
+                try:
+                    now = time.monotonic()
+                    power = clamp.get_power()
+                    if now >= next_reactive or reactive_power is None:
+                        reactive_power = clamp.get_powervars()
+                        next_reactive = now + 15
+                    if now >= next_slow or battery_voltage is None:
+                        battery_voltage = clamp.get_batteryvolts()
+                        temperature = clamp.get_temperature()
+                        next_slow = now + 600
+                    values = {
+                        "power": power,
+                        "reactive_power": reactive_power,
+                        "apparent_power": round(math.hypot(power, reactive_power)),
+                        "energy": clamp.get_cumulative_kwh(),
+                        "battery_voltage": battery_voltage,
+                        "temperature": temperature,
+                        "mains_voltage": clamp.get_voltage(),
+                        "hid_path": hid_path,
+                    }
+                    self.publisher.state(self.serial, values)
+                except TimeoutError:
+                    report_timeout()
                 self.stop_event.wait(self.poll_interval)
         except Exception:
             LOG.exception("Onzo meter on HID path %r disconnected", self.path)

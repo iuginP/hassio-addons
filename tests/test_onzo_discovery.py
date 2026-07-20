@@ -42,6 +42,24 @@ class OnzoDiscoveryTests(unittest.TestCase):
             [{"topic": "onzo/status"}, {"topic": "onzo/12345678/status"}],
         )
 
+    def test_hid_path_is_a_disabled_by_default_diagnostic_sensor(self):
+        payloads = {
+            json.loads(payload)["object_id"]: json.loads(payload)
+            for _, payload in discovery.messages("12345678", "House")
+        }
+
+        hid_path = payloads["onzo_12345678_hid_path"]
+        self.assertEqual(hid_path["entity_category"], "diagnostic")
+        self.assertFalse(hid_path["enabled_by_default"])
+        self.assertEqual(hid_path["value_template"], "{{ value_json.hid_path }}")
+        self.assertNotIn("device_class", hid_path)
+        self.assertNotIn("state_class", hid_path)
+
+        self.assertEqual(
+            discovery.state_payload({"power": 42, "hid_path": "/dev/hidraw0"}),
+            '{"power":42,"hid_path":"/dev/hidraw0"}',
+        )
+
     def test_serial_name_overrides_are_normalized(self):
         overrides = discovery.name_overrides(
             [

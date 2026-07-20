@@ -83,9 +83,33 @@ def messages(serial: str, name: str, app_version: str = "1.0.0") -> list[tuple[s
         }
         topic = f"homeassistant/sensor/{device_id}/{key}/config"
         result.append((topic, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
+    hid_path_id = f"{device_id}_hid_path"
+    hid_path_payload = {
+        "name": "HID path",
+        "object_id": hid_path_id,
+        "unique_id": hid_path_id,
+        "state_topic": state_topic(serial),
+        "availability": [
+            {"topic": app_availability_topic()},
+            {"topic": availability_topic(serial)},
+        ],
+        "availability_mode": "all",
+        "value_template": "{{ value_json.hid_path }}",
+        "entity_category": "diagnostic",
+        "enabled_by_default": False,
+        "device": device,
+        "origin": origin,
+    }
+    result.append(
+        (
+            f"homeassistant/sensor/{device_id}/hid_path/config",
+            json.dumps(hid_path_payload, ensure_ascii=False, separators=(",", ":")),
+        )
+    )
     return result
 
 
 def state_payload(values: dict[str, Any]) -> str:
-    state = {key: values[key] for key in SENSORS if values.get(key) is not None}
+    state_keys = (*SENSORS, "hid_path")
+    state = {key: values[key] for key in state_keys if values.get(key) is not None}
     return json.dumps(state, allow_nan=False, separators=(",", ":"))

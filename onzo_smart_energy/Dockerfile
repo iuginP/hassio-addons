@@ -1,6 +1,6 @@
 FROM python:3.13-slim-bookworm
 
-ARG BUILD_VERSION=1.0.1
+ARG BUILD_VERSION=1.0.2
 ARG BUILD_ARCH=amd64
 
 LABEL \
