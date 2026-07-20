@@ -33,6 +33,14 @@ class FakeHIDDevice:
         self.closed = True
 
 
+class ReportIdHIDDevice(FakeHIDDevice):
+    def write(self, data):
+        self.writes.append(bytes(data))
+        if len(data) != 65 or data[0] != 0:
+            return 0
+        return len(data)
+
+
 class OnzoProtocolTests(unittest.TestCase):
     def test_connection_targets_an_enumerated_hid_path(self):
         device = FakeHIDDevice()
@@ -51,8 +59,20 @@ class OnzoProtocolTests(unittest.TestCase):
         connection.connect()
         connection.message_send(payload)
         self.assertEqual(len(device.writes), 2)
-        self.assertTrue(all(len(frame) == 64 for frame in device.writes))
+        self.assertTrue(all(len(report) == 65 for report in device.writes))
+        self.assertTrue(all(report[0] == 0 for report in device.writes))
         self.assertEqual(connection.message_receive(), payload)
+
+    def test_message_send_includes_hidapi_report_id(self):
+        device = ReportIdHIDDevice()
+        connection = protocol.Connection(b"path", device_factory=lambda: device)
+        connection.connect()
+
+        connection.message_send(b"request")
+
+        self.assertEqual(len(device.writes[0]), 65)
+        self.assertEqual(device.writes[0][0], 0)
+        self.assertEqual(device.writes[0][1:3], bytes((1, 7)))
 
     def test_clamp_serial_combines_two_registers(self):
         clamp = protocol.Clamp(None)

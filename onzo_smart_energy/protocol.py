@@ -69,8 +69,12 @@ class Connection:
             chunk, data = data[:62], data[62:]
             final = int(not data)
             frame = bytes((final, len(chunk))) + chunk.ljust(62, b"\xff")
-            if self.dev.write(frame) != 64:
-                raise ProtocolError("Incomplete HID write")
+            report = b"\x00" + frame
+            written = self.dev.write(report)
+            if written != len(report):
+                raise ProtocolError(
+                    f"Incomplete HID write ({written}/{len(report)} bytes)"
+                )
 
     def message_receive(self, timeout: int = 5000) -> bytes:
         if self.dev is None:
