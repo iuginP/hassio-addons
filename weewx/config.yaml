@@ -30,7 +30,7 @@ options:
   altitude: 0
   altitude_unit: meter
 schema:
-  driver: str
+  driver: list(weewx.drivers.acurite|weewx.drivers.cc3000|weewx.drivers.fousb|weewx.drivers.simulator|weewx.drivers.te923|weewx.drivers.ultimeter|weewx.drivers.vantage|weewx.drivers.wmr100|weewx.drivers.wmr300|weewx.drivers.wmr9x8|weewx.drivers.ws1|weewx.drivers.ws23xx|weewx.drivers.ws28xx)
   units: list(us|metric|metricwx)
   location: str
   latitude: float(-90,90)
