@@ -1,0 +1,24 @@
+configuration:
+  driver:
+    name: WeeWX driver
+    description: Python module for the weather-station driver. Keep the simulator to test without hardware.
+  units:
+    name: Unit system
+    description: Unit system used in generated reports.
+  location:
+    name: Station location
+    description: A short name displayed on weather reports.
+  latitude:
+    name: Latitude
+    description: Decimal degrees from -90 to 90.
+  longitude:
+    name: Longitude
+    description: Decimal degrees from -180 to 180.
+  altitude:
+    name: Altitude
+    description: Station altitude as a whole number.
+  altitude_unit:
+    name: Altitude unit
+    description: Unit used for the station altitude.
+network:
+  80/tcp: WeeWX generated weather reports
