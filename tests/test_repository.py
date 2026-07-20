@@ -1,3 +1,4 @@
+import re
 import struct
 import unittest
 from pathlib import Path
@@ -92,6 +93,20 @@ class RepositoryTests(unittest.TestCase):
             (ROOT / "weewx/translations/en.yaml").read_text()
         )["configuration"]
         self.assertEqual(set(config["schema"]), set(translations))
+
+    def test_weewx_release_version_is_consistent(self):
+        version = yaml.safe_load((ROOT / "weewx/config.yaml").read_text())["version"]
+        dockerfile = (ROOT / "weewx/Dockerfile").read_text()
+        mqtt_service = (ROOT / "weewx/home_assistant_mqtt.py").read_text()
+
+        self.assertRegex(
+            dockerfile,
+            re.compile(rf"^ARG BUILD_VERSION={re.escape(version)}$", re.MULTILINE),
+        )
+        self.assertRegex(
+            mqtt_service,
+            re.compile(rf'^APP_VERSION = "{re.escape(version)}"$', re.MULTILINE),
+        )
 
     def test_onzo_supports_mqtt_and_multiple_meter_overrides(self):
         config = yaml.safe_load((ROOT / "onzo_smart_energy/config.yaml").read_text())

@@ -16,7 +16,7 @@ from weewx.engine import StdService
 from user import mqtt_discovery
 
 LOG = logging.getLogger(__name__)
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 
 
 def supervisor_mqtt_service() -> dict[str, Any]:

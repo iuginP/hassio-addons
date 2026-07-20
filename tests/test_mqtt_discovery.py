@@ -59,6 +59,58 @@ class MQTTDiscoveryTests(unittest.TestCase):
         )
         self.assertEqual(payload, {"outTemp": 21.5})
 
+    def test_indoor_rain_and_pressure_observations_are_discovered_and_published(self):
+        record = {
+            "inTemp": 29.2,
+            "inHumidity": 64.0,
+            "pressure": 1008.4,
+            "altimeter": 1012.1,
+            "rain": 0.2,
+            "rainTotal": 148.6,
+            "rxCheckPercent": 100.0,
+        }
+
+        state = json.loads(discovery.state_payload(record))
+        payloads = {
+            json.loads(payload)["object_id"]: json.loads(payload)
+            for _, payload in discovery.discovery_messages("Station", "1.3.0")
+        }
+
+        self.assertEqual(state, record)
+        self.assertEqual(payloads["weewx_in_temp"]["device_class"], "temperature")
+        self.assertEqual(payloads["weewx_pressure"]["unit_of_measurement"], "hPa")
+        self.assertEqual(
+            payloads["weewx_rain_total"]["state_class"], "total_increasing"
+        )
+        self.assertEqual(
+            payloads["weewx_rx_check_percent"]["entity_category"], "diagnostic"
+        )
+
+    def test_outdoor_sensor_battery_is_a_diagnostic_binary_sensor(self):
+        messages = discovery.discovery_messages("Station", "1.3.0")
+        topic, payload_json = next(
+            (topic, payload)
+            for topic, payload in messages
+            if topic.endswith("/out_temp_battery_status/config")
+        )
+        payload = json.loads(payload_json)
+
+        self.assertIn("/binary_sensor/", topic)
+        self.assertEqual(payload["device_class"], "battery")
+        self.assertEqual(payload["entity_category"], "diagnostic")
+        self.assertEqual(payload["payload_on"], "1")
+        self.assertEqual(payload["payload_off"], "0")
+        self.assertEqual(
+            payload["value_template"],
+            "{% if value_json.outTempBatteryStatus is defined %}"
+            "{{ value_json.outTempBatteryStatus | int }}"
+            "{% endif %}",
+        )
+        self.assertEqual(
+            json.loads(discovery.state_payload({"outTempBatteryStatus": 0.0})),
+            {"outTempBatteryStatus": 0.0},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
