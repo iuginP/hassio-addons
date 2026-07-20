@@ -21,7 +21,7 @@ import discovery
 import runtime
 from protocol import Clamp, Connection
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 LOG = logging.getLogger("onzo")
 
 
@@ -78,23 +78,47 @@ class Publisher:
             discovery.app_availability_topic(), "offline", qos=1, retain=True
         )
         self.client.on_connect = self._on_connect
+        self.client.on_connect_fail = self._on_connect_fail
+        self.client.on_disconnect = self._on_disconnect
         self.client.on_message = self._on_message
         self.client.enable_logger(LOG)
+        LOG.info(
+            "Connecting to MQTT service at %s:%s (TLS: %s)",
+            service["host"],
+            service.get("port", 1883),
+            bool(service.get("ssl")),
+        )
         self.client.connect_async(
             str(service["host"]), int(service.get("port", 1883)), keepalive=60
         )
         self.client.loop_start()
+
+    def _publish(self, topic: str, payload: str, *, qos: int, retain: bool) -> None:
+        result = self.client.publish(topic, payload, qos=qos, retain=retain)
+        if result.rc != mqtt.MQTT_ERR_SUCCESS:
+            LOG.error(
+                "MQTT publish failed for %s: %s",
+                topic,
+                mqtt.error_string(result.rc),
+            )
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
         if reason_code != 0:
             LOG.error("MQTT connection failed: %s", reason_code)
             return
         LOG.info("Connected to the Home Assistant MQTT service")
-        client.publish(
+        self._publish(
             discovery.app_availability_topic(), "online", qos=1, retain=True
         )
         client.subscribe("homeassistant/status", qos=1)
         self.publish_all_discovery()
+
+    def _on_connect_fail(self, client, userdata):
+        LOG.error("Could not connect to the Home Assistant MQTT service; retrying")
+
+    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
+        if reason_code != 0:
+            LOG.warning("Disconnected from MQTT: %s; retrying", reason_code)
 
     def _on_message(self, client, userdata, message):
         if message.topic == "homeassistant/status" and message.payload == b"online":
@@ -107,8 +131,10 @@ class Publisher:
 
     def publish_discovery(self, serial: str, name: str) -> None:
         for topic, payload in discovery.messages(serial, name, APP_VERSION):
-            self.client.publish(topic, payload, qos=1, retain=True)
-        self.client.publish(discovery.availability_topic(serial), "online", qos=1, retain=True)
+            self._publish(topic, payload, qos=1, retain=True)
+        self._publish(
+            discovery.availability_topic(serial), "online", qos=1, retain=True
+        )
 
     def publish_all_discovery(self) -> None:
         with self.lock:
@@ -117,7 +143,7 @@ class Publisher:
             self.publish_discovery(serial, name)
 
     def state(self, serial: str, values: dict[str, Any]) -> None:
-        self.client.publish(
+        self._publish(
             discovery.state_topic(serial),
             discovery.state_payload(values),
             qos=0,
@@ -125,7 +151,9 @@ class Publisher:
         )
 
     def offline(self, serial: str) -> None:
-        self.client.publish(discovery.availability_topic(serial), "offline", qos=1, retain=True)
+        self._publish(
+            discovery.availability_topic(serial), "offline", qos=1, retain=True
+        )
 
     def close(self) -> None:
         with self.lock:
@@ -234,6 +262,15 @@ class MeterManager:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     options = load_options()
+    LOG.info(
+        "Starting Onzo Smart Energy Meter %s (USB %04x:%04x, scan every %ss, poll every %ss)",
+        APP_VERSION,
+        usb_id(options["vid"]),
+        usb_id(options["pid"]),
+        options["scan_interval"],
+        options["poll_interval"],
+    )
+    LOG.info("Requesting MQTT connection details from Supervisor")
     publisher = Publisher(supervisor_mqtt_service())
     manager = MeterManager(options, publisher)
 
