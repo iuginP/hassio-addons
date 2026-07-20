@@ -83,6 +83,33 @@ def messages(serial: str, name: str, app_version: str = "1.0.0") -> list[tuple[s
         }
         topic = f"homeassistant/sensor/{device_id}/{key}/config"
         result.append((topic, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))))
+    clamp_serial_id = f"{device_id}_clamp_serial"
+    clamp_serial_payload = {
+        "name": "Clamp serial",
+        "object_id": clamp_serial_id,
+        "unique_id": clamp_serial_id,
+        "state_topic": state_topic(serial),
+        "availability": [
+            {"topic": app_availability_topic()},
+            {"topic": availability_topic(serial)},
+        ],
+        "availability_mode": "all",
+        "value_template": "{{ value_json.clamp_serial }}",
+        "entity_category": "diagnostic",
+        "enabled_by_default": True,
+        "device": device,
+        "origin": origin,
+    }
+    result.append(
+        (
+            f"homeassistant/sensor/{device_id}/clamp_serial/config",
+            json.dumps(
+                clamp_serial_payload,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+        )
+    )
     hid_path_id = f"{device_id}_hid_path"
     hid_path_payload = {
         "name": "HID path",
@@ -110,6 +137,6 @@ def messages(serial: str, name: str, app_version: str = "1.0.0") -> list[tuple[s
 
 
 def state_payload(values: dict[str, Any]) -> str:
-    state_keys = (*SENSORS, "hid_path")
+    state_keys = (*SENSORS, "clamp_serial", "hid_path")
     state = {key: values[key] for key in state_keys if values.get(key) is not None}
     return json.dumps(state, allow_nan=False, separators=(",", ":"))

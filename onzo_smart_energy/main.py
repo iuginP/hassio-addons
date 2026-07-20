@@ -21,7 +21,7 @@ import discovery
 import runtime
 from protocol import Clamp, Connection
 
-APP_VERSION = "1.0.3"
+APP_VERSION = "1.0.4"
 LOG = logging.getLogger("onzo")
 
 
@@ -210,7 +210,10 @@ class MeterWorker(threading.Thread):
             LOG.info("Discovered %s on HID path %r", name, self.path)
             self.publisher.register(self.serial, name)
             hid_path = runtime.display_path(self.path)
-            self.publisher.state(self.serial, {"hid_path": hid_path})
+            self.publisher.state(
+                self.serial,
+                {"clamp_serial": self.serial, "hid_path": hid_path},
+            )
             reactive_power = None
             battery_voltage = None
             temperature = None
@@ -235,6 +238,7 @@ class MeterWorker(threading.Thread):
                         "battery_voltage": battery_voltage,
                         "temperature": temperature,
                         "mains_voltage": clamp.get_voltage(),
+                        "clamp_serial": self.serial,
                         "hid_path": hid_path,
                     }
                     self.publisher.state(self.serial, values)

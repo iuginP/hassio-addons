@@ -56,8 +56,27 @@ class OnzoDiscoveryTests(unittest.TestCase):
         self.assertNotIn("state_class", hid_path)
 
         self.assertEqual(
-            discovery.state_payload({"power": 42, "hid_path": "/dev/hidraw0"}),
-            '{"power":42,"hid_path":"/dev/hidraw0"}',
+            discovery.state_payload(
+                {
+                    "power": 42,
+                    "clamp_serial": "12345678",
+                    "hid_path": "/dev/hidraw0",
+                }
+            ),
+            '{"power":42,"clamp_serial":"12345678","hid_path":"/dev/hidraw0"}',
+        )
+
+    def test_clamp_serial_is_an_enabled_diagnostic_sensor(self):
+        payloads = {
+            json.loads(payload)["object_id"]: json.loads(payload)
+            for _, payload in discovery.messages("12345678", "House")
+        }
+
+        clamp_serial = payloads["onzo_12345678_clamp_serial"]
+        self.assertEqual(clamp_serial["entity_category"], "diagnostic")
+        self.assertTrue(clamp_serial["enabled_by_default"])
+        self.assertEqual(
+            clamp_serial["value_template"], "{{ value_json.clamp_serial }}"
         )
 
     def test_serial_name_overrides_are_normalized(self):

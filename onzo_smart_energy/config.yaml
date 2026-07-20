@@ -1,5 +1,5 @@
 name: Onzo Smart Energy Meter
-version: 1.0.3
+version: 1.0.4
 slug: onzo_smart_energy
 description: Auto-discover one or more Onzo USB energy meters in Home Assistant
 url: https://github.com/iuginP/hassio-addons/tree/main/onzo_smart_energy

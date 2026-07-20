@@ -103,7 +103,10 @@ class OnzoMainTests(unittest.TestCase):
         self.assertEqual(publisher.registered, [("00000000", "Onzo 00000000")])
         self.assertEqual(
             publisher.states[0],
-            ("00000000", {"hid_path": "1-1.2:1.0"}),
+            (
+                "00000000",
+                {"clamp_serial": "00000000", "hid_path": "1-1.2:1.0"},
+            ),
         )
 
 
