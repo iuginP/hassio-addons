@@ -1,4 +1,4 @@
-# Homila Home Assistant apps
+# iuginP Home Assistant apps
 
 This repository is prepared to be used as a custom Home Assistant add-on repository.
 
@@ -7,7 +7,7 @@ This repository is prepared to be used as a custom Home Assistant add-on reposit
 1. In Home Assistant, open Settings -> Add-ons -> Add-on Store.
 2. Click the three-dots menu in the top-right and choose "Repositories".
 3. Add this repository URL:
-   - https://github.com/homila/hassio-addons
+   - https://github.com/iuginP/hassio-addons
 4. Save the repository.
 5. Restart Home Assistant or refresh the add-on store so the new repository is discovered.
 

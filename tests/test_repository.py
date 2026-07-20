@@ -26,6 +26,20 @@ class RepositoryTests(unittest.TestCase):
         self.assertTrue(metadata["name"])
         self.assertTrue(metadata["url"].startswith("https://"))
 
+    def test_python_cache_uses_the_actual_dependency_file(self):
+        workflow = yaml.safe_load(
+            (ROOT / ".github/workflows/test.yml").read_text()
+        )
+        setup_python = next(
+            step
+            for step in workflow["jobs"]["test"]["steps"]
+            if step.get("uses", "").startswith("actions/setup-python@")
+        )
+        self.assertEqual(
+            setup_python["with"].get("cache-dependency-path"),
+            "requirements-dev.txt",
+        )
+
     def test_every_app_has_valid_metadata_and_files(self):
         apps = sorted(path.parent for path in ROOT.glob("*/config.yaml"))
         self.assertTrue(apps, "repository must contain at least one app")
