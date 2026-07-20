@@ -63,6 +63,16 @@ class WeeWXConfigureTests(unittest.TestCase):
                 config_text.count("user.home_assistant_mqtt.HomeAssistantMQTT"), 1
             )
 
+    def test_container_logging_uses_console_instead_of_syslog(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config_file = Path(directory) / "weewx.conf"
+            config_file.write_text("[Station]\n    location = Home Assistant\n")
+
+            configure.configure_console_logging(config_file)
+
+            config = configure.ConfigObj(str(config_file), encoding="utf-8")
+            self.assertEqual(config["Logging"]["root"]["handlers"], ["console"])
+
 
 if __name__ == "__main__":
     unittest.main()
