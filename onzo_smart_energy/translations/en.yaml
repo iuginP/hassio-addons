@@ -1,0 +1,23 @@
+configuration:
+  vid:
+    name: USB vendor ID
+    description: Four hexadecimal digits. The Onzo default is 04d8.
+  pid:
+    name: USB product ID
+    description: Four hexadecimal digits. The Onzo default is 003f.
+  scan_interval:
+    name: USB scan interval
+    description: Seconds between scans for newly attached or disconnected meters.
+  poll_interval:
+    name: Poll interval
+    description: Seconds between live readings from each connected meter.
+  meters:
+    name: Meter names
+    description: Optional friendly-name overrides keyed by the clamp serial printed in the app log.
+    fields:
+      serial:
+        name: Clamp serial
+        description: Decimal or 0x-prefixed hexadecimal serial number.
+      name:
+        name: Friendly name
+        description: Device name shown in Home Assistant.
