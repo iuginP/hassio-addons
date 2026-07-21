@@ -122,6 +122,13 @@ class RepositoryTests(unittest.TestCase):
         )["configuration"]
         self.assertEqual(set(config["schema"]), set(translations))
 
+    def test_onzo_builds_hidapi_with_the_hidraw_backend(self):
+        dockerfile = (ROOT / "onzo_smart_energy/Dockerfile").read_text()
+        self.assertIn("--no-binary=hidapi", dockerfile)
+        self.assertIn("hidapi==0.14.0.post2", dockerfile)
+        self.assertIn("libudev-dev", dockerfile)
+        self.assertIn("pkg-config", dockerfile)
+
     def test_onzo_release_version_is_consistent(self):
         version = yaml.safe_load(
             (ROOT / "onzo_smart_energy/config.yaml").read_text()
