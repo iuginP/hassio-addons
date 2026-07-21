@@ -5,6 +5,7 @@ Adapted for Python 3 and multi-device path selection from PyOnzo.
 
 from __future__ import annotations
 
+import os
 import random
 import struct
 from enum import IntEnum
@@ -49,6 +50,10 @@ class Connection:
         self.dev = None
 
     def connect(self) -> None:
+        if self.device_factory is None and not os.path.exists(self.path):
+            raise ProtocolError(
+                f"HID device {self.path!r} is not mapped into the add-on"
+            )
         factory = self.device_factory
         if factory is None:
             import hid

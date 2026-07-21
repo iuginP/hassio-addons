@@ -1,4 +1,5 @@
 import importlib.util
+import os
 import struct
 import unittest
 from unittest import mock
@@ -49,6 +50,14 @@ class OnzoProtocolTests(unittest.TestCase):
         connection.disconnect()
         self.assertEqual(device.opened_path, b"/dev/hidraw7")
         self.assertTrue(device.closed)
+
+    def test_connection_reports_an_unmapped_hidraw_device(self):
+        connection = protocol.Connection(b"/dev/hidraw0")
+        with mock.patch.object(os.path, "exists", return_value=False):
+            with self.assertRaisesRegex(
+                protocol.ProtocolError, "is not mapped into the add-on"
+            ):
+                connection.connect()
 
     def test_message_framing_round_trips_multiple_hid_frames(self):
         payload = b"x" * 70

@@ -111,6 +111,7 @@ class RepositoryTests(unittest.TestCase):
     def test_onzo_supports_mqtt_and_multiple_meter_overrides(self):
         config = yaml.safe_load((ROOT / "onzo_smart_energy/config.yaml").read_text())
         self.assertTrue(config["usb"])
+        self.assertIn("/dev/hidraw0", config["devices"])
         self.assertIn("mqtt:need", config["services"])
         self.assertEqual(config["options"]["meters"], [])
         self.assertEqual(

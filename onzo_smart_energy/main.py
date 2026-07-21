@@ -21,7 +21,7 @@ import discovery
 import runtime
 from protocol import Clamp, Connection
 
-APP_VERSION = "1.0.5"
+APP_VERSION = "1.0.6"
 LOG = logging.getLogger("onzo")
 
 

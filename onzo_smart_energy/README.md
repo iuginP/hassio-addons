@@ -7,6 +7,9 @@ This app discovers all attached Onzo USB energy meters with the configured USB v
 - Install the official Mosquitto Broker app and configure Home Assistant's MQTT integration.
 - Attach one or more Onzo displays to the Home Assistant host by USB.
 
+The receiver must be connected before the app starts so Home Assistant Supervisor can
+map `/dev/hidraw0` into the container. Restart the app after reconnecting the receiver.
+
 No MQTT credentials are required in this app. Supervisor supplies short-lived broker credentials automatically.
 
 ## Configuration
