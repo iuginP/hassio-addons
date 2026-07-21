@@ -30,7 +30,7 @@ class MQTTDiscoveryTests(unittest.TestCase):
         )
         self.assertTrue(
             all(
-                payload["availability_topic"] == "weewx/weather/status"
+                payload["availability"][0]["topic"] == "weewx/weather/status"
                 for payload in payloads
             )
         )
@@ -58,6 +58,29 @@ class MQTTDiscoveryTests(unittest.TestCase):
             )
         )
         self.assertEqual(payload, {"outTemp": 21.5})
+
+    def test_sensor_availability_requires_addon_and_observation(self):
+        payloads = {
+            json.loads(payload)["object_id"]: json.loads(payload)
+            for _, payload in discovery.discovery_messages("Station", "1.3.1")
+        }
+        outside_temperature = payloads["weewx_out_temp"]
+
+        self.assertNotIn("availability_topic", outside_temperature)
+        self.assertEqual(outside_temperature["availability_mode"], "all")
+        self.assertEqual(
+            outside_temperature["availability"],
+            [
+                {"topic": "weewx/weather/status"},
+                {
+                    "topic": "weewx/weather/state",
+                    "value_template": (
+                        "{% if value_json.outTemp is defined %}"
+                        "online{% else %}offline{% endif %}"
+                    ),
+                },
+            ],
+        )
 
     def test_indoor_rain_and_pressure_observations_are_discovered_and_published(self):
         record = {
@@ -100,6 +123,12 @@ class MQTTDiscoveryTests(unittest.TestCase):
         self.assertEqual(payload["entity_category"], "diagnostic")
         self.assertEqual(payload["payload_on"], "1")
         self.assertEqual(payload["payload_off"], "0")
+        self.assertEqual(
+            payload["availability"][1]["value_template"],
+            "{% if value_json.outTempBatteryStatus is defined "
+            "and value_json.rxCheckPercent | float(0) > 0 %}"
+            "online{% else %}offline{% endif %}",
+        )
         self.assertEqual(
             payload["value_template"],
             "{% if value_json.outTempBatteryStatus is defined %}"

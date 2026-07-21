@@ -76,6 +76,21 @@ def _slug(observation: str) -> str:
     return "".join(characters)
 
 
+def _observation_availability(
+    observation: str, condition: str | None = None
+) -> list[dict[str, str]]:
+    """Require both a running add-on and a value in the latest LOOP packet."""
+    condition = condition or f"value_json.{observation} is defined"
+    value_template = (
+        f"{{% if {condition} %}}"
+        "online{% else %}offline{% endif %}"
+    )
+    return [
+        {"topic": AVAILABILITY_TOPIC},
+        {"topic": STATE_TOPIC, "value_template": value_template},
+    ]
+
+
 def discovery_messages(location: str, app_version: str) -> list[tuple[str, str]]:
     """Return retained discovery topic/payload pairs for all supported sensors."""
     messages = []
@@ -98,7 +113,8 @@ def discovery_messages(location: str, app_version: str) -> list[tuple[str, str]]
             "object_id": object_id,
             "unique_id": object_id,
             "state_topic": STATE_TOPIC,
-            "availability_topic": AVAILABILITY_TOPIC,
+            "availability": _observation_availability(observation),
+            "availability_mode": "all",
             "value_template": "{{ value_json.%s }}" % observation,
             "state_class": state_class,
             "device": device,
@@ -123,12 +139,20 @@ def discovery_messages(location: str, app_version: str) -> list[tuple[str, str]]
         payload_off,
     ) in BINARY_SENSORS.items():
         object_id = f"weewx_{_slug(observation)}"
+        availability_condition = f"value_json.{observation} is defined"
+        if observation == "outTempBatteryStatus":
+            availability_condition += (
+                " and value_json.rxCheckPercent | float(0) > 0"
+            )
         payload = {
             "name": name,
             "object_id": object_id,
             "unique_id": object_id,
             "state_topic": STATE_TOPIC,
-            "availability_topic": AVAILABILITY_TOPIC,
+            "availability": _observation_availability(
+                observation, availability_condition
+            ),
+            "availability_mode": "all",
             "value_template": (
                 f"{{% if value_json.{observation} is defined %}}"
                 f"{{{{ value_json.{observation} | int }}}}"
