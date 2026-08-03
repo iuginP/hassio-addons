@@ -65,7 +65,7 @@ def build_environments(options: Mapping[str, object]) -> ServiceEnvironments:
         "WIPCAM_BASIC_PASSWORD": _required(options, "basic_password"),
         "WIPCAM_LOG_LEVEL": _string(options, "log_level", "INFO").upper(),
         "WIPCAM_WEB_BIND_HOST": "0.0.0.0",
-        "WIPCAM_WEB_PORT": "8080",
+        "WIPCAM_WEB_PORT": "18080",
         "WIPCAM_RTSP_PORT": "8554",
         "WIPCAM_MEDIAMTX_API_URL": "http://127.0.0.1:19997",
         "WIPCAM_LOW_STREAM_ENABLED": _boolean(

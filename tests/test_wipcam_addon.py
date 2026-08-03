@@ -16,6 +16,16 @@ SPEC.loader.exec_module(launcher)
 
 
 class WipcamAddonLauncherTests(unittest.TestCase):
+    def test_web_service_avoids_common_host_port_8080(self):
+        environments = launcher.build_environments(
+            {
+                "lan_bind_ip": "192.168.1.10",
+                "basic_username": "admin",
+                "basic_password": "management-secret",
+            }
+        )
+        self.assertEqual(environments.wipcam["WIPCAM_WEB_PORT"], "18080")
+
     def test_partial_rtsp_credentials_are_rejected(self):
         with self.assertRaisesRegex(
             launcher.ConfigurationError,
@@ -58,6 +68,7 @@ class WipcamAddonLauncherTests(unittest.TestCase):
         self.assertEqual(
             environments.wipcam["WIPCAM_BASIC_PASSWORD"], "management-secret"
         )
+        self.assertEqual(environments.wipcam["WIPCAM_WEB_PORT"], "18080")
         self.assertEqual(environments.wipcam["WIPCAM_LOW_STREAM_ENABLED"], "false")
         self.assertEqual(environments.wipcam["WIPCAM_LOW_STREAM_HEIGHT"], "360")
         self.assertEqual(

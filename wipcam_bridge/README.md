@@ -21,7 +21,8 @@ Home Assistant/Supervisor API access is requested.
 
 ## Use
 
-1. Start the add-on and open its web interface at port `8080`.
+1. Start the add-on and select **Open Web UI**, or browse to TCP port `18080`
+   on the Home Assistant host.
 2. Sign in with the configured management credentials.
 3. Select **Add camera**, scan the LAN, and enter the camera security code.
 4. Enable a configured camera.
@@ -44,7 +45,7 @@ Camera definitions and retained diagnostics are stored in
 
 ## Ports and security
 
-WiPcam Bridge listens on TCP `8080` for its authenticated management interface
+WiPcam Bridge listens on TCP `18080` for its authenticated management interface
 and TCP `8554` for RTSP. It also uses UDP `7200` for discovery, UDP `32100`
 for local rendezvous, and UDP `13000-13099` for camera workers. Check for port
 conflicts before starting another service on the Home Assistant host. Because

@@ -151,20 +151,18 @@ class RepositoryTests(unittest.TestCase):
         config = yaml.safe_load((app / "config.yaml").read_text())
 
         self.assertEqual(config["slug"], "wipcam_bridge")
-        self.assertEqual(config["version"], "0.1.0")
+        self.assertEqual(config["version"], "0.1.1")
         self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
         self.assertTrue(config["host_network"])
         self.assertEqual(config["options"]["lan_bind_ip"], None)
         self.assertEqual(config["options"]["basic_password"], None)
         self.assertEqual(config["schema"]["basic_password"], "password")
-        self.assertRegex(
-            config["webui"],
-            re.compile(
-                r"^(?:https?|\[PROTO:\w+\])://\[HOST\]:\[PORT:\d+\].*$"
-            ),
+        self.assertEqual(config["webui"], "http://[HOST]:[PORT:18080]/")
+        self.assertEqual(
+            config["watchdog"],
+            "http://[HOST]:[PORT:18080]/healthz",
         )
-        self.assertEqual(config["ports"]["8080/tcp"], 8080)
-        self.assertEqual(config["watchdog"], "http://[HOST]:8080/healthz")
+        self.assertEqual(config["ports"]["18080/tcp"], 18080)
         for capability in (
             "docker_api",
             "full_access",

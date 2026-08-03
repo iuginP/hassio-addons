@@ -2,7 +2,7 @@ FROM bluenviron/mediamtx:1.18.2 AS mediamtx
 
 FROM python:3.11-slim-bookworm
 
-ARG BUILD_VERSION=0.1.0
+ARG BUILD_VERSION=0.1.1
 ARG BUILD_ARCH=amd64
 ARG WIPCAM_COMMIT=aedd25bf1fc48f34972de56b3c1d856eb6a25e18
 
@@ -29,6 +29,6 @@ WORKDIR /app
 COPY launcher.py run.sh ./
 RUN chmod +x /app/run.sh
 
-EXPOSE 8080 8554
+EXPOSE 18080 8554
 
 CMD ["/app/run.sh"]

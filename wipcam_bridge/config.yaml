@@ -1,5 +1,5 @@
 name: WiPcam Bridge
-version: 0.1.0
+version: 0.1.1
 slug: wipcam_bridge
 description: Discover and publish WiPcam/OMGuard cameras as authenticated RTSP streams
 url: https://github.com/iuginP/hassio-addons/tree/main/wipcam_bridge
@@ -11,15 +11,15 @@ boot: auto
 stage: experimental
 init: false
 host_network: true
-webui: http://[HOST]:[PORT:8080]/
-watchdog: http://[HOST]:8080/healthz
+webui: http://[HOST]:[PORT:18080]/
+watchdog: http://[HOST]:[PORT:18080]/healthz
 panel_icon: mdi:cctv
 panel_title: WiPcam Bridge
 backup: cold
 ports:
-  8080/tcp: 8080
+  18080/tcp: 18080
 ports_description:
-  8080/tcp: Authenticated WiPcam management interface
+  18080/tcp: Authenticated WiPcam management interface
 options:
   lan_bind_ip: null
   basic_username: admin
