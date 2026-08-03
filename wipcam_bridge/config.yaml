@@ -11,11 +11,15 @@ boot: auto
 stage: experimental
 init: false
 host_network: true
-webui: http://[HOST]:8080/
+webui: http://[HOST]:[PORT:8080]/
 watchdog: http://[HOST]:8080/healthz
 panel_icon: mdi:cctv
 panel_title: WiPcam Bridge
 backup: cold
+ports:
+  8080/tcp: 8080
+ports_description:
+  8080/tcp: Authenticated WiPcam management interface
 options:
   lan_bind_ip: null
   basic_username: admin

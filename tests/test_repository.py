@@ -157,7 +157,13 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(config["options"]["lan_bind_ip"], None)
         self.assertEqual(config["options"]["basic_password"], None)
         self.assertEqual(config["schema"]["basic_password"], "password")
-        self.assertEqual(config["webui"], "http://[HOST]:8080/")
+        self.assertRegex(
+            config["webui"],
+            re.compile(
+                r"^(?:https?|\[PROTO:\w+\])://\[HOST\]:\[PORT:\d+\].*$"
+            ),
+        )
+        self.assertEqual(config["ports"]["8080/tcp"], 8080)
         self.assertEqual(config["watchdog"], "http://[HOST]:8080/healthz")
         for capability in (
             "docker_api",

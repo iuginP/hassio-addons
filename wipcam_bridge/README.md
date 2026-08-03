@@ -47,7 +47,8 @@ Camera definitions and retained diagnostics are stored in
 WiPcam Bridge listens on TCP `8080` for its authenticated management interface
 and TCP `8554` for RTSP. It also uses UDP `7200` for discovery, UDP `32100`
 for local rendezvous, and UDP `13000-13099` for camera workers. Check for port
-conflicts before starting another service on the Home Assistant host.
+conflicts before starting another service on the Home Assistant host. Because
+the add-on uses host networking, these listener ports cannot be remapped.
 
 Unused MediaMTX RTMP, HLS, WebRTC, SRT, and UDP/multicast RTSP listeners are
 disabled to keep the host-network surface limited to the features this add-on
