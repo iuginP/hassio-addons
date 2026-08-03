@@ -1,0 +1,47 @@
+name: WiPcam Bridge
+version: 0.1.0
+slug: wipcam_bridge
+description: Discover and publish WiPcam/OMGuard cameras as authenticated RTSP streams
+url: https://github.com/iuginP/hassio-addons/tree/main/wipcam_bridge
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+stage: experimental
+init: false
+host_network: true
+webui: http://[HOST]:8080/
+watchdog: http://[HOST]:8080/healthz
+panel_icon: mdi:cctv
+panel_title: WiPcam Bridge
+backup: cold
+options:
+  lan_bind_ip: null
+  basic_username: admin
+  basic_password: null
+  log_level: INFO
+  low_stream_enabled: true
+  low_stream_width: 640
+  low_stream_height: 480
+  low_stream_fps: 10
+  low_stream_bitrate: 512k
+  low_stream_preset: veryfast
+  telnet_username: root
+  experimental_camera_writes_enabled: false
+schema:
+  lan_bind_ip: str
+  basic_username: str
+  basic_password: password
+  rtsp_read_username: str?
+  rtsp_read_password: password?
+  log_level: list(DEBUG|INFO|WARNING|ERROR|CRITICAL)
+  low_stream_enabled: bool
+  low_stream_width: int(2,4096)
+  low_stream_height: int(2,4096)
+  low_stream_fps: int(1,60)
+  low_stream_bitrate: match(^[1-9][0-9]*[kKmM]$)
+  low_stream_preset: list(ultrafast|superfast|veryfast|faster|fast|medium)
+  telnet_username: str
+  telnet_password: password?
+  experimental_camera_writes_enabled: bool

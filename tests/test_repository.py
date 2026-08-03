@@ -146,6 +146,52 @@ class RepositoryTests(unittest.TestCase):
             re.compile(rf'^APP_VERSION = "{re.escape(version)}"$', re.MULTILINE),
         )
 
+    def test_wipcam_bridge_has_a_minimal_host_network_contract(self):
+        app = ROOT / "wipcam_bridge"
+        config = yaml.safe_load((app / "config.yaml").read_text())
+
+        self.assertEqual(config["slug"], "wipcam_bridge")
+        self.assertEqual(config["version"], "0.1.0")
+        self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
+        self.assertTrue(config["host_network"])
+        self.assertEqual(config["options"]["lan_bind_ip"], None)
+        self.assertEqual(config["options"]["basic_password"], None)
+        self.assertEqual(config["schema"]["basic_password"], "password")
+        self.assertEqual(config["webui"], "http://[HOST]:8080/")
+        self.assertEqual(config["watchdog"], "http://[HOST]:8080/healthz")
+        for capability in (
+            "docker_api",
+            "full_access",
+            "hassio_api",
+            "homeassistant_api",
+            "host_dbus",
+            "host_ipc",
+            "host_pid",
+            "host_uts",
+            "privileged",
+        ):
+            self.assertFalse(config.get(capability), capability)
+
+        translations = yaml.safe_load(
+            (app / "translations/en.yaml").read_text()
+        )["configuration"]
+        self.assertEqual(set(config["schema"]), set(translations))
+
+    def test_wipcam_bridge_release_inputs_are_pinned_and_consistent(self):
+        app = ROOT / "wipcam_bridge"
+        version = yaml.safe_load((app / "config.yaml").read_text())["version"]
+        dockerfile = (app / "Dockerfile").read_text()
+
+        self.assertRegex(
+            dockerfile,
+            re.compile(rf"^ARG BUILD_VERSION={re.escape(version)}$", re.MULTILINE),
+        )
+        self.assertRegex(
+            dockerfile,
+            re.compile(r"^ARG WIPCAM_COMMIT=[0-9a-f]{40}$", re.MULTILINE),
+        )
+        self.assertIn("FROM bluenviron/mediamtx:1.18.2 AS mediamtx", dockerfile)
+
     def test_weewx_release_version_is_consistent(self):
         version = yaml.safe_load((ROOT / "weewx/config.yaml").read_text())["version"]
         dockerfile = (ROOT / "weewx/Dockerfile").read_text()

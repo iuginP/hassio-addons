@@ -23,6 +23,10 @@ This repository is prepared to be used as a custom Home Assistant add-on reposit
 
 Install the app from the same repository, ensure Home Assistant's MQTT integration and Mosquitto Broker app are configured, then attach one or more Onzo meters by USB. Every connected clamp is discovered as a separate Home Assistant device.
 
+## Install the WiPcam Bridge app
+
+Install WiPcam Bridge from the same repository, then configure the Home Assistant host's LAN IPv4 address and strong management credentials before starting it. The app discovers WiPcam/OMGuard cameras and publishes enabled feeds as RTSP streams on port 8554.
+
 ## Development
 
 Run the repository and app validation suite locally with:
@@ -36,7 +40,6 @@ Pull requests targeting `main` run the same checks automatically.
 
 ## Notes
 
-- The first add-on implemented here is WeeWX.
 - WeeWX settings are available in the Home Assistant Configuration tab.
 - WeeWX automatically creates a weather-station device and sensor entities through MQTT Discovery.
 - Station data is stored in the app's persistent `/data` volume.

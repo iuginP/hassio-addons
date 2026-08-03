@@ -1,0 +1,46 @@
+configuration:
+  lan_bind_ip:
+    name: LAN bind address
+    description: IPv4 address assigned to the Home Assistant host interface on the camera LAN.
+  basic_username:
+    name: Management username
+    description: Username required to open the WiPcam management interface.
+  basic_password:
+    name: Management password
+    description: Strong password required to open the WiPcam management interface.
+  rtsp_read_username:
+    name: RTSP username
+    description: Optional RTSP reader username; set it together with the RTSP password.
+  rtsp_read_password:
+    name: RTSP password
+    description: Optional RTSP reader password; set it together with the RTSP username.
+  log_level:
+    name: Log level
+    description: Verbosity of WiPcam Bridge logs.
+  low_stream_enabled:
+    name: Enable low stream
+    description: Publish a separately scaled stream for supported high-quality camera sessions.
+  low_stream_width:
+    name: Low-stream width
+    description: Width in pixels for the scaled stream; use an even value.
+  low_stream_height:
+    name: Low-stream height
+    description: Height in pixels for the scaled stream; use an even value.
+  low_stream_fps:
+    name: Low-stream frame rate
+    description: Target frames per second for the scaled stream.
+  low_stream_bitrate:
+    name: Low-stream bitrate
+    description: FFmpeg bitrate such as 512k or 1M.
+  low_stream_preset:
+    name: Low-stream encoder preset
+    description: Faster presets use less CPU at the cost of compression efficiency.
+  telnet_username:
+    name: Camera Telnet username
+    description: Username used for supported camera file and control operations.
+  telnet_password:
+    name: Camera Telnet password
+    description: Optional password used for supported camera file and control operations.
+  experimental_camera_writes_enabled:
+    name: Enable experimental camera writes
+    description: Expose dangerous firmware write operations; leave disabled for normal use.
