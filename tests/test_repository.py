@@ -1,5 +1,8 @@
+import os
 import re
 import struct
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -112,6 +115,52 @@ class RepositoryTests(unittest.TestCase):
             "home-assistant/builder/actions/publish-multi-arch-manifest@2026.06.0",
             actions,
         )
+
+    def test_builder_strips_json_quotes_from_app_information(self):
+        reusable = yaml.safe_load(
+            (ROOT / ".github/workflows/build-app.yaml").read_text()
+        )
+        prepare = reusable["jobs"]["prepare"]
+        normalize = next(
+            step
+            for step in prepare["steps"]
+            if step["name"] == "Normalize app information"
+        )
+
+        expected = {
+            "image_name": "hassio-weewx",
+            "registry_prefix": "ghcr.io/iuginp",
+            "version": "9.8.7",
+            "name": "WeeWX",
+            "description": "Weather station",
+            "url": "https://example.com/weewx",
+        }
+        raw = {
+            "INFO_IMAGE": '"ghcr.io/iuginp/hassio-weewx"',
+            "INFO_VERSION": '"9.8.7"',
+            "INFO_NAME": '"WeeWX"',
+            "INFO_DESCRIPTION": '"Weather station"',
+            "INFO_URL": '"https://example.com/weewx"',
+        }
+        with tempfile.NamedTemporaryFile() as output:
+            subprocess.run(
+                ["bash", "-c", normalize["run"]],
+                check=True,
+                env={**os.environ, **raw, "GITHUB_OUTPUT": output.name},
+            )
+            output.seek(0)
+            actual = dict(
+                line.decode().rstrip().split("=", 1)
+                for line in output
+                if b"=" in line
+            )
+
+        self.assertEqual(actual, expected)
+        for key in ("version", "name", "description", "url"):
+            self.assertEqual(
+                prepare["outputs"][key],
+                f"${{{{ steps.normalize.outputs.{key} }}}}",
+            )
 
     def test_every_app_has_home_assistant_branding(self):
         for config_path in ROOT.glob("*/config.yaml"):

@@ -19,11 +19,11 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
       build_matrix: ${{ steps.matrix.outputs.matrix }}
       image_name: ${{ steps.normalize.outputs.image_name }}
-      name: ${{ steps.info.outputs.name }}
-      description: ${{ steps.info.outputs.description }}
-      url: ${{ steps.info.outputs.url }}
+      name: ${{ steps.normalize.outputs.name }}
+      description: ${{ steps.normalize.outputs.description }}
+      url: ${{ steps.normalize.outputs.url }}
       registry_prefix: ${{ steps.normalize.outputs.registry_prefix }}
-      version: ${{ steps.info.outputs.version }}
+      version: ${{ steps.normalize.outputs.version }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7.0.1
@@ -34,14 +34,31 @@ jobs:
         with:
           path: ./${{ inputs.app }}
 
-      - name: Normalize image name
+      - name: Normalize app information
         id: normalize
         env:
-          IMAGE: ${{ steps.info.outputs.image }}
+          INFO_DESCRIPTION: ${{ steps.info.outputs.description }}
+          INFO_IMAGE: ${{ steps.info.outputs.image }}
+          INFO_NAME: ${{ steps.info.outputs.name }}
+          INFO_URL: ${{ steps.info.outputs.url }}
+          INFO_VERSION: ${{ steps.info.outputs.version }}
         shell: bash
         run: |
-          echo "image_name=${IMAGE##*/}" >> "${GITHUB_OUTPUT}"
-          echo "registry_prefix=${IMAGE%/*}" >> "${GITHUB_OUTPUT}"
+          decode() {
+            if [[ "$1" != "null" ]]; then
+              jq -r . <<< "$1"
+            fi
+          }
+
+          image="$(decode "${INFO_IMAGE}")"
+          {
+            echo "image_name=${image##*/}"
+            echo "registry_prefix=${image%/*}"
+            echo "version=$(decode "${INFO_VERSION}")"
+            echo "name=$(decode "${INFO_NAME}")"
+            echo "description=$(decode "${INFO_DESCRIPTION}")"
+            echo "url=$(decode "${INFO_URL}")"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Prepare architecture matrix
         id: matrix
