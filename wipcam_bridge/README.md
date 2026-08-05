@@ -26,7 +26,8 @@ Home Assistant/Supervisor API access is requested.
 2. Sign in with the configured management credentials.
 3. Select **Add camera**, scan the LAN, and enter the camera security code.
 4. Enable a configured camera.
-5. Use the displayed recording or low-stream RTSP URL in Home Assistant.
+5. Use the displayed recording or low-stream RTSP URL in Home Assistant. The
+   updated bridge also displays a fresh JPEG still-image URL for each camera.
 
 The default RTSP paths are:
 
@@ -39,6 +40,32 @@ Set both `rtsp_read_username` and `rtsp_read_password` to protect RTSP readers.
 If both are omitted, RTSP playback is available without authentication to
 clients that can reach the Home Assistant host. Publishing and the MediaMTX API
 remain restricted to loopback clients.
+
+## Home Assistant Generic Camera
+
+Add the **Generic Camera** integration and configure both endpoints shown by
+the WiPcam management UI:
+
+- **Still Image URL**: the camera's HTTP `still.jpg` URL on port `18080`.
+- **Stream Source URL**: the recording or `-sub` RTSP URL on port `8554`.
+- **RTSP transport protocol**: `tcp`.
+
+The still image endpoint uses the management Basic authentication. The
+simplest setup is to configure the optional RTSP reader username and password
+to match the management credentials, then enter that username and password in
+Generic Camera. If the credentials intentionally differ, include the
+appropriately URL-encoded credentials in each displayed URL instead of using
+Generic Camera's shared username and password fields.
+
+Home Assistant OS provides its own managed go2rtc through `default_config`;
+do not point the core `go2rtc` integration at the WiPcam MediaMTX API or at a
+restricted go2rtc instance. If Home Assistant reports
+`Stream source is not supported by go2rtc`, its selected go2rtc instance is
+not advertising the `ffmpeg` source used for Generic Camera. Remove a custom `go2rtc: url:`
+override or standalone/custom go2rtc replacement, update Home Assistant Core,
+restart Home Assistant, and try the built-in managed instance again. This
+specific message is raised before the RTSP URL is opened, so it does not
+indicate a WiPcam codec or MediaMTX compatibility failure.
 
 Camera definitions and retained diagnostics are stored in
 `/data/wipcam.sqlite3` and are included in cold add-on backups.
@@ -66,7 +93,7 @@ reviewed the upstream documentation and accept that risk.
 ## Packaged versions
 
 - WiPcam Bridge `0.1.0`, pinned to commit
-  `aedd25bf1fc48f34972de56b3c1d856eb6a25e18`
+  `0959ece54cea5829057ecc9a02d0de1416bb746e`
 - MediaMTX `1.18.2`
 
 For protocol and operational details, see the

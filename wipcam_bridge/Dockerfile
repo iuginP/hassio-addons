@@ -2,9 +2,9 @@ FROM bluenviron/mediamtx:1.18.2 AS mediamtx
 
 FROM python:3.11-slim-bookworm
 
-ARG BUILD_VERSION=0.1.1
+ARG BUILD_VERSION=0.1.2
 ARG BUILD_ARCH=amd64
-ARG WIPCAM_COMMIT=aedd25bf1fc48f34972de56b3c1d856eb6a25e18
+ARG WIPCAM_COMMIT=0959ece54cea5829057ecc9a02d0de1416bb746e
 
 LABEL \
     io.hass.version="${BUILD_VERSION}" \

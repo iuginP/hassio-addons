@@ -151,7 +151,7 @@ class RepositoryTests(unittest.TestCase):
         config = yaml.safe_load((app / "config.yaml").read_text())
 
         self.assertEqual(config["slug"], "wipcam_bridge")
-        self.assertEqual(config["version"], "0.1.1")
+        self.assertEqual(config["version"], "0.1.2")
         self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
         self.assertTrue(config["host_network"])
         self.assertEqual(config["options"]["lan_bind_ip"], None)
@@ -194,7 +194,20 @@ class RepositoryTests(unittest.TestCase):
             dockerfile,
             re.compile(r"^ARG WIPCAM_COMMIT=[0-9a-f]{40}$", re.MULTILINE),
         )
+        self.assertIn(
+            "ARG WIPCAM_COMMIT=0959ece54cea5829057ecc9a02d0de1416bb746e",
+            dockerfile,
+        )
         self.assertIn("FROM bluenviron/mediamtx:1.18.2 AS mediamtx", dockerfile)
+
+    def test_wipcam_bridge_documents_home_assistant_camera_setup(self):
+        readme = (ROOT / "wipcam_bridge" / "README.md").read_text()
+
+        self.assertIn("Home Assistant Generic Camera", readme)
+        self.assertIn("Still Image URL", readme)
+        self.assertIn("Stream Source URL", readme)
+        self.assertIn("Stream source is not supported by go2rtc", readme)
+        self.assertIn("ffmpeg", readme)
 
     def test_weewx_release_version_is_consistent(self):
         version = yaml.safe_load((ROOT / "weewx/config.yaml").read_text())["version"]
