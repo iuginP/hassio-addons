@@ -2,9 +2,11 @@ import os
 import re
 import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from shutil import copytree
 
 import yaml
 
@@ -115,6 +117,96 @@ class RepositoryTests(unittest.TestCase):
             "home-assistant/builder/actions/publish-multi-arch-manifest@2026.06.0",
             actions,
         )
+
+    def test_wipcam_upstream_image_sync_bumps_and_builds_the_addon(self):
+        workflow_path = ROOT / ".github/workflows/sync-wipcam.yaml"
+        workflow_text = workflow_path.read_text()
+        workflow = yaml.safe_load(workflow_text)
+
+        self.assertIn("schedule:", workflow_text)
+        self.assertIn("iuginP/wipcam-bridge", workflow_text)
+        self.assertIn("workflow_runs", workflow_text)
+        self.assertEqual(
+            workflow["jobs"]["build-app"]["uses"],
+            "./.github/workflows/build-app.yaml",
+        )
+        self.assertEqual(
+            workflow["jobs"]["build-app"]["with"]["app"],
+            "wipcam_bridge",
+        )
+        self.assertTrue(workflow["jobs"]["build-app"]["with"]["publish"])
+        self.assertIn("ref", workflow["jobs"]["build-app"]["with"])
+
+        reusable = yaml.safe_load(
+            (ROOT / ".github/workflows/build-app.yaml").read_text()
+        )
+        self.assertIn("ref", reusable[True]["workflow_call"]["inputs"])
+        checkout_steps = [
+            step
+            for job in reusable["jobs"].values()
+            for step in job.get("steps", [])
+            if step.get("uses", "").startswith("actions/checkout@")
+        ]
+        self.assertTrue(checkout_steps)
+        self.assertTrue(all("ref" in step.get("with", {}) for step in checkout_steps))
+
+    def test_wipcam_release_sync_is_idempotent(self):
+        commit = "a" * 40
+        current_version = yaml.safe_load(
+            (ROOT / "wipcam_bridge/config.yaml").read_text()
+        )["version"]
+        major, minor, patch = current_version.split(".")
+        next_version = f"{major}.{minor}.{int(patch) + 1}"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copytree(ROOT / "wipcam_bridge", root / "wipcam_bridge")
+            script = ROOT / ".github/scripts/sync_wipcam_release.py"
+
+            first = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--root",
+                    str(root),
+                    "--commit",
+                    commit,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            config = yaml.safe_load(
+                (root / "wipcam_bridge/config.yaml").read_text()
+            )
+            dockerfile = (root / "wipcam_bridge/Dockerfile").read_text()
+            readme = (root / "wipcam_bridge/README.md").read_text()
+
+            self.assertEqual(config["version"], next_version)
+            self.assertIn(f"ARG BUILD_VERSION={next_version}", dockerfile)
+            self.assertIn(f"ARG WIPCAM_COMMIT={commit}", dockerfile)
+            self.assertIn(f"`{commit}`", readme)
+            self.assertIn(f"updated={next_version}", first.stdout)
+
+            second = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--root",
+                    str(root),
+                    "--commit",
+                    commit,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertIn("unchanged", second.stdout)
+            self.assertEqual(
+                yaml.safe_load(
+                    (root / "wipcam_bridge/config.yaml").read_text()
+                )["version"],
+                next_version,
+            )
 
     def test_builder_strips_json_quotes_from_app_information(self):
         reusable = yaml.safe_load(
@@ -241,7 +333,7 @@ class RepositoryTests(unittest.TestCase):
         config = yaml.safe_load((app / "config.yaml").read_text())
 
         self.assertEqual(config["slug"], "wipcam_bridge")
-        self.assertEqual(config["version"], "0.1.7")
+        self.assertRegex(str(config["version"]), r"^\d+\.\d+\.\d+$")
         self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
         self.assertTrue(config["host_network"])
         self.assertEqual(config["options"]["lan_bind_ip"], None)
@@ -280,13 +372,17 @@ class RepositoryTests(unittest.TestCase):
             dockerfile,
             re.compile(rf"^ARG BUILD_VERSION={re.escape(version)}$", re.MULTILINE),
         )
+        commit_match = re.search(
+            r"^ARG WIPCAM_COMMIT=([0-9a-f]{40})$", dockerfile, re.MULTILINE
+        )
+        self.assertIsNotNone(commit_match)
         self.assertRegex(
             dockerfile,
             re.compile(r"^ARG WIPCAM_COMMIT=[0-9a-f]{40}$", re.MULTILINE),
         )
         self.assertIn(
-            "ARG WIPCAM_COMMIT=1b67f5482b69fda0261bf7ed7d8f2d6e33304d81",
-            dockerfile,
+            f"`{commit_match.group(1)}`",
+            (app / "README.md").read_text(),
         )
         self.assertIn("FROM bluenviron/mediamtx:1.18.2 AS mediamtx", dockerfile)
 

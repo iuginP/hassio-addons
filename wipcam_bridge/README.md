@@ -93,7 +93,7 @@ reviewed the upstream documentation and accept that risk.
 ## Packaged versions
 
 - WiPcam Bridge `0.1.0`, pinned to commit
-  `f75907ea57cc9586abf15e3fc8283ed0bb2a5230`
+  `1b67f5482b69fda0261bf7ed7d8f2d6e33304d81`
 - MediaMTX `1.18.2`
 
 For protocol and operational details, see the

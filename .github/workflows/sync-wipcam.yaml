@@ -1,0 +1,86 @@
+name: Sync WiPcam Bridge image
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-wipcam-bridge
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Pin newest upstream image
+    if: github.repository == 'iuginP/hassio-addons'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      commit: ${{ steps.update.outputs.commit }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Find newest published upstream revision
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          response="$(curl --fail --retry 3 --silent --show-error \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/iuginP/wipcam-bridge/actions/workflows/ci.yml/runs?status=success&per_page=100")"
+          commit="$(jq --exit-status --raw-output \
+            '.workflow_runs | map(select(.event == "push" or .event == "workflow_dispatch")) | first | .head_sha' \
+            <<< "${response}")"
+          if [[ ! "${commit}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "No successful upstream image publication found" >&2
+            exit 1
+          fi
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+
+      - name: Update add-on release metadata
+        id: update
+        env:
+          UPSTREAM_COMMIT: ${{ steps.upstream.outputs.commit }}
+        shell: bash
+        run: |
+          result="$(python3 .github/scripts/sync_wipcam_release.py \
+            --commit "${UPSTREAM_COMMIT}")"
+          if [[ "${result}" == "unchanged" ]]; then
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          version="${result#updated=}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wipcam_bridge/config.yaml wipcam_bridge/Dockerfile wipcam_bridge/README.md
+          git commit -m "Bump WiPcam Bridge to ${version}"
+          git push
+          {
+            echo "changed=true"
+            echo "commit=$(git rev-parse HEAD)"
+          } >> "${GITHUB_OUTPUT}"
+
+  build-app:
+    name: Build updated WiPcam add-on
+    needs: sync
+    if: needs.sync.outputs.changed == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    uses: ./.github/workflows/build-app.yaml
+    with:
+      app: wipcam_bridge
+      publish: true
+      ref: ${{ needs.sync.outputs.commit }}
+    secrets: inherit
