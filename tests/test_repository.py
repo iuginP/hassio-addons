@@ -241,7 +241,7 @@ class RepositoryTests(unittest.TestCase):
         config = yaml.safe_load((app / "config.yaml").read_text())
 
         self.assertEqual(config["slug"], "wipcam_bridge")
-        self.assertEqual(config["version"], "0.1.6")
+        self.assertEqual(config["version"], "0.1.7")
         self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
         self.assertTrue(config["host_network"])
         self.assertEqual(config["options"]["lan_bind_ip"], None)
@@ -285,7 +285,7 @@ class RepositoryTests(unittest.TestCase):
             re.compile(r"^ARG WIPCAM_COMMIT=[0-9a-f]{40}$", re.MULTILINE),
         )
         self.assertIn(
-            "ARG WIPCAM_COMMIT=f75907ea57cc9586abf15e3fc8283ed0bb2a5230",
+            "ARG WIPCAM_COMMIT=1b67f5482b69fda0261bf7ed7d8f2d6e33304d81",
             dockerfile,
         )
         self.assertIn("FROM bluenviron/mediamtx:1.18.2 AS mediamtx", dockerfile)
