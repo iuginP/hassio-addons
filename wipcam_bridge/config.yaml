@@ -1,5 +1,5 @@
 name: WiPcam Bridge
-version: 0.1.7
+version: 0.1.8
 slug: wipcam_bridge
 description: Discover and publish WiPcam/OMGuard cameras as authenticated RTSP streams
 url: https://github.com/iuginP/hassio-addons/tree/main/wipcam_bridge
