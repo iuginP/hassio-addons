@@ -8,6 +8,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_APP_KEYS = {"name", "version", "slug", "description", "arch"}
+IMAGE_PREFIX = "ghcr.io/iuginp/hassio-"
 WEEWX_BUILTIN_DRIVERS = (
     "weewx.drivers.acurite",
     "weewx.drivers.cc3000",
@@ -71,6 +72,46 @@ class RepositoryTests(unittest.TestCase):
                 self.assertTrue((app / "Dockerfile").is_file())
                 self.assertTrue((app / "run.sh").is_file())
                 self.assertTrue((app / "README.md").is_file())
+
+    def test_every_app_uses_its_prebuilt_multi_arch_image(self):
+        for config_path in ROOT.glob("*/config.yaml"):
+            config = yaml.safe_load(config_path.read_text())
+            with self.subTest(app=config["slug"]):
+                self.assertEqual(
+                    config.get("image"),
+                    f"{IMAGE_PREFIX}{config['slug'].replace('_', '-')}",
+                )
+
+    def test_builder_workflow_builds_and_publishes_changed_apps(self):
+        workflow = yaml.safe_load(
+            (ROOT / ".github/workflows/builder.yaml").read_text()
+        )
+        build_job = workflow["jobs"]["build-app"]
+
+        self.assertEqual(
+            build_job["uses"],
+            "./.github/workflows/build-app.yaml",
+        )
+        self.assertEqual(build_job["permissions"]["packages"], "write")
+        self.assertIn("push", build_job["with"]["publish"])
+
+        reusable = yaml.safe_load(
+            (ROOT / ".github/workflows/build-app.yaml").read_text()
+        )
+        steps = [
+            step
+            for job in reusable["jobs"].values()
+            for step in job.get("steps", [])
+        ]
+        actions = {step.get("uses") for step in steps}
+        self.assertIn(
+            "home-assistant/builder/actions/build-image@2026.06.0",
+            actions,
+        )
+        self.assertIn(
+            "home-assistant/builder/actions/publish-multi-arch-manifest@2026.06.0",
+            actions,
+        )
 
     def test_every_app_has_home_assistant_branding(self):
         for config_path in ROOT.glob("*/config.yaml"):
@@ -151,7 +192,7 @@ class RepositoryTests(unittest.TestCase):
         config = yaml.safe_load((app / "config.yaml").read_text())
 
         self.assertEqual(config["slug"], "wipcam_bridge")
-        self.assertEqual(config["version"], "0.1.2")
+        self.assertEqual(config["version"], "0.1.3")
         self.assertEqual(set(config["arch"]), {"aarch64", "amd64"})
         self.assertTrue(config["host_network"])
         self.assertEqual(config["options"]["lan_bind_ip"], None)

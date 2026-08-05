@@ -38,6 +38,16 @@ python -m unittest discover -s tests -v
 
 Pull requests targeting `main` run the same checks automatically.
 
+Every add-on uses a versioned multi-architecture image from GitHub Container
+Registry. Pull requests build changed add-ons without publishing them. Pushes
+to `main` publish `amd64` and `aarch64` images plus the generic multi-arch
+manifest consumed by Home Assistant. The workflow can also be run manually to
+rebuild every add-on.
+
+After a package is published for the first time, its visibility must be set to
+**Public** in the repository owner's GitHub package settings so Home Assistant
+can pull it without registry credentials.
+
 ## Notes
 
 - WeeWX settings are available in the Home Assistant Configuration tab.

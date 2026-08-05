@@ -2,7 +2,7 @@ FROM bluenviron/mediamtx:1.18.2 AS mediamtx
 
 FROM python:3.11-slim-bookworm
 
-ARG BUILD_VERSION=0.1.2
+ARG BUILD_VERSION=0.1.3
 ARG BUILD_ARCH=amd64
 ARG WIPCAM_COMMIT=0959ece54cea5829057ecc9a02d0de1416bb746e
 
