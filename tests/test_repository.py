@@ -285,7 +285,7 @@ class RepositoryTests(unittest.TestCase):
             re.compile(r"^ARG WIPCAM_COMMIT=[0-9a-f]{40}$", re.MULTILINE),
         )
         self.assertIn(
-            "ARG WIPCAM_COMMIT=0959ece54cea5829057ecc9a02d0de1416bb746e",
+            "ARG WIPCAM_COMMIT=f75907ea57cc9586abf15e3fc8283ed0bb2a5230",
             dockerfile,
         )
         self.assertIn("FROM bluenviron/mediamtx:1.18.2 AS mediamtx", dockerfile)
